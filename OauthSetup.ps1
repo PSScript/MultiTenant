@@ -29,7 +29,6 @@ New-IntraOrganizationConnector -name "ExchangeHybridOnPremisesToOnline $tenant" 
 
 Get-PartnerApplication |  ?{$_.ApplicationIdentifier -eq "00000002-0000-0ff1-ce00-000000000000" -and $_.Realm -eq ""} | Set-PartnerApplication -Enabled $true
 
-
 Connect-MsolService
 $CertFile = "$env:SYSTEMDRIVE\OAuthConfig\OAuthCert.cer"
 $objFSO = New-Object -ComObject Scripting.FileSystemObject
@@ -78,3 +77,52 @@ $p = Get-MsolServicePrincipal -ServicePrincipalName $ServiceName
 
 New-MsolServicePrincipalCredential -AppPrincipalId $p.AppPrincipalId -Type asymmetric -Usage Verify -Value $credValue
 
+New-MigrationEndpoint -Name Hybrid1 -ExchangeRemoteMove -RemoteServer MRSServer.contoso.com -Credentials (Get-Credential Contoso.com\Administrator)
+
+New-MigrationEndpoint -Name Hybrid1 -ExchangeRemoteMove -RemoteServer pshell.site -Credentials (Get-Credential pshell.site\Administrator)
+
+
+
+
+
+New-sendconnector  "Outbound to $tenant1" -addresspace "SMTP:$tenant1.mail.onmicrosoft.com;1" -CloudServicesMailEnabled $true
+
+New-sendconnector  "Outbound to $tenant2" -addresspace "SMTP:$tenant2.mail.onmicrosoft.com;1" -CloudServicesMailEnabled $true
+
+New-sendconnector  "Outbound to $tenant3" -addresspace "SMTP:$tenant3.mail.onmicrosoft.com;1" -CloudServicesMailEnabled $true
+
+smtp:cvgdnsabr.mail.onmicrosoft.com;1
+
+ Outbound to Office 365 - 549bfa0d-2ba7-4f47-8f51-55605049304d
+
+ New-sendconnector  "Outbound to Office 365 - 549bfa0d-2ba7-4f47-8f51-55605049304d" -addresspace "smtp:cvgdnsabr.mail.onmicrosoft.com;1" -RequireTLS $true -CloudServicesMailEnabled $true
+
+ TlsAuthLevel DomainValidation
+
+
+
+
+
+$Param = @{   RequireTLS = $true
+           AddressSpaces = "smtp:$tenant1.mail.onmicrosoft.com;1"
+CloudServicesMailEnabled = $true }
+
+
+New-sendconnector  "Outbound to $tenant1" @Param
+
+
+Get-ExchangeCertificate | Format-List FriendlyName,Subject,CertificateDomains,Thumbprint,Services
+
+$TLSCert = Get-ExchangeCertificate <Thumbrint from above>
+
+$TLSCertName = "<I>$($TLSCert.Issuer)<S>$($TLSCert.Subject)"
+
+Set-SendConnector "Outbound to $tenant1" -RequireTLS $true -TlsSettings CertificateValidation -TlsCertificateName $TLSCertName
+
+
+Set-SendConnector "Outbound to $tenant1" -RequireTLS $true -TlsSettings -RequireTLS $true -TLSAuthLevel Domainvalidation -TlsDomain Domain.TLD
+
+
+Set-SendConnector "Outbound to Office 365 - 549bfa0d-2ba7-4f47-8f51-55605049304d" -RequireTLS $true -TlsSettings CertificateValidation -TlsCertificateName $TLSCertName  
+
+Set-SendConnector "Outbound to Office 365 - 549bfa0d-2ba7-4f47-8f51-55605049304d" -RequireTLS $true -TlsSettings DomainValidation
